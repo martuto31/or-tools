@@ -1,5 +1,5 @@
-﻿
-using Google.OrTools.ConstraintSolver;
+﻿using Google.OrTools.ConstraintSolver;
+using Google.Protobuf.WellKnownTypes;
 using or_tools.Models;
 
 namespace or_tools.Services
@@ -23,8 +23,11 @@ namespace or_tools.Services
 
             routing.SetArcCostEvaluatorOfAllVehicles(transitCallbackIndex);
 
-            RoutingSearchParameters searchParameters = operations_research_constraint_solver.DefaultRoutingSearchParameters();
-            searchParameters.FirstSolutionStrategy = FirstSolutionStrategy.Types.Value.PathCheapestArc;
+            var searchParameters = operations_research_constraint_solver.DefaultRoutingSearchParameters();
+            searchParameters.FirstSolutionStrategy = FirstSolutionStrategy.Types.Value.AllUnperformed;
+            searchParameters.LocalSearchMetaheuristic = LocalSearchMetaheuristic.Types.Value.SimulatedAnnealing;
+            searchParameters.TimeLimit = new Duration { Seconds = 60 };
+            searchParameters.UseFullPropagation = true;
 
             Assignment solution = routing.SolveWithParameters(searchParameters);
             if (solution == null) return null;
@@ -41,10 +44,8 @@ namespace or_tools.Services
                 totalDistance += routing.GetArcCostForVehicle(index, nextIndex, 0);
                 index = nextIndex;
             }
-            route.Add(manager.IndexToNode(index));
 
             return new TspVrpResponse { Route = route, Distance = totalDistance };
         }
-
     }
 }
