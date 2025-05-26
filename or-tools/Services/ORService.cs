@@ -24,9 +24,9 @@ namespace or_tools.Services
             routing.SetArcCostEvaluatorOfAllVehicles(transitCallbackIndex);
 
             var searchParameters = operations_research_constraint_solver.DefaultRoutingSearchParameters();
-            searchParameters.FirstSolutionStrategy = FirstSolutionStrategy.Types.Value.AllUnperformed;
+            searchParameters.FirstSolutionStrategy = FirstSolutionStrategy.Types.Value.Automatic;
             searchParameters.LocalSearchMetaheuristic = LocalSearchMetaheuristic.Types.Value.SimulatedAnnealing;
-            searchParameters.TimeLimit = new Duration { Seconds = 60 };
+            searchParameters.TimeLimit = new Duration { Seconds = 20 };
             searchParameters.UseFullPropagation = true;
 
             Assignment solution = routing.SolveWithParameters(searchParameters);
@@ -44,6 +44,8 @@ namespace or_tools.Services
                 totalDistance += routing.GetArcCostForVehicle(index, nextIndex, 0);
                 index = nextIndex;
             }
+
+            route.Add(manager.IndexToNode(index));
 
             return new TspVrpResponse { Route = route, Distance = totalDistance };
         }
