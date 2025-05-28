@@ -3,6 +3,7 @@
     public class TspVrpRequest
     {
         public List<List<long>> DistanceMatrix { get; set; }
+        public List<int> Priorities { get; set; }
         //public int VehicleCount { get; set; } = 1;
         //public int DepotIndex { get; set; } = 0;
     }

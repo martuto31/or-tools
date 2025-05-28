@@ -11,6 +11,9 @@ namespace or_tools.Services
             var distanceMatrix = request.DistanceMatrix;
             int locationCount = distanceMatrix.Count;
 
+            // Fallback if priorities not provided
+            var priorities = request.Priorities ?? Enumerable.Repeat(1, locationCount).ToList();
+
             RoutingIndexManager manager = new(locationCount, 1, 0);
             RoutingModel routing = new(manager);
 
@@ -23,10 +26,26 @@ namespace or_tools.Services
 
             routing.SetArcCostEvaluatorOfAllVehicles(transitCallbackIndex);
 
+            // Add disjunctions based on priority
+            for (int i = 1; i < locationCount; i++)
+            {
+                int priority = priorities[i];
+                long penalty = priority switch
+                {
+                    2 => 10_000_000, // High priority – very costly to skip
+                    1 => 10_000,    // Medium priority
+                    0 => 1_000,     // Low priority – skippable
+                    _ => 10_000
+                };
+
+                routing.AddDisjunction(new long[] { manager.NodeToIndex(i) }, penalty);
+            }
+
             var searchParameters = operations_research_constraint_solver.DefaultRoutingSearchParameters();
             searchParameters.FirstSolutionStrategy = FirstSolutionStrategy.Types.Value.Automatic;
             searchParameters.LocalSearchMetaheuristic = LocalSearchMetaheuristic.Types.Value.SimulatedAnnealing;
-            searchParameters.TimeLimit = new Duration { Seconds = 20 };
+            //searchParameters.TimeLimit = new Duration { Seconds = 20 };
+            searchParameters.TimeLimit = new Duration { Seconds = 5 };
             searchParameters.UseFullPropagation = true;
 
             Assignment solution = routing.SolveWithParameters(searchParameters);
